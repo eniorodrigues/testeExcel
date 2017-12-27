@@ -1,0 +1,14 @@
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\testeExcel.exe.config
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\testeExcel.exe
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\testeExcel.pdb
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.Form1.resources
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.Properties.Resources.resources
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.csproj.GenerateResource.Cache
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.csproj.CoreCompileInputs.cache
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.exe
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.pdb
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\obj\Debug\testeExcel.csprojResolveAssemblyReference.cache
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\EPPlus.dll
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\LumenWorks.Framework.IO.dll
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\EPPlus.xml
+c:\users\enrodrigues\source\repos\testeExcel\testeExcel\bin\Debug\LumenWorks.Framework.IO.xml
