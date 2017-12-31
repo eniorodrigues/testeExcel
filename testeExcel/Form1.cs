@@ -984,8 +984,8 @@ namespace testeExcel
 	                        [Ins_MP_Pro_Id],
 	                        [Ins_Qtd_Requisitada],
 	                        [Ins_MP_Und_Id],
-	                        [Ins_DT_Ini],
 	                        [Ins_Ordem_Prod],
+	                        [Ins_DT_Ini],
 	                        [Ins_DT_Fim],
 	                        [Ins_CNPJ],
 	                        [Lin_Origem_ID],
@@ -1002,7 +1002,8 @@ namespace testeExcel
 	                        [Ins_CNPJ],
 	                        [ID],
 	                        [Arq_Origem_ID]
-                            FROM [Insumo_Produto]";
+                            FROM [Insumo_Produto]
+                            WHERE Ins_MP_Pro_Id IS NOT NULL";
 
                 //WHERE VND_NF_ID IS NOT NULL AND VND_CFOP IS NOT NULL";
 
@@ -1020,6 +1021,120 @@ namespace testeExcel
                     tr.Commit();
 
                     label1.Text = "Tabela Insumo_Produto copiada ";
+                }
+                catch (Exception ex)
+                {
+                    tr.Rollback();
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+
+            }
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+
+            MyApp = new Excel.Application();
+            object misValue = System.Reflection.Missing.Value;
+
+            MyApp.Workbooks.Add("C:\\a\\relacaoProducaoOriginal.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\relacaoProducaoOriginal.xlsx");
+            Worksheet ws = wb.Sheets[1];
+
+            ws.Range["A:A"].NumberFormat = "@";
+           // ws.Range["D:D"].NumberFormat = "@";
+            MyApp.DisplayAlerts = false;
+            wb.SaveAs("c:\\a\\relacaoProducaoFormatado.xlsx");
+            wb.Close();
+            MyApp.Quit();
+            SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
+            string sqlConnectionString = "Data Source=BRCAENRODRIGUES\\SQLEXPRESS;Initial Catalog=my_database;Integrated Security=True";
+
+            SqlCommand cmdColuna = conn.CreateCommand();
+
+            cmdColuna.CommandText =
+              @"IF OBJECT_ID('dbo.Relacao_Carga', 'U') IS NOT NULL 
+                  DROP TABLE dbo.Relacao_Carga; 
+                    CREATE TABLE [dbo].[Relacao_Carga](
+	                [Rel_PA_Pro_ID] [varchar](70) NOT NULL,
+	                [Rel_MP_Pro_ID] [varchar](70) NOT NULL,
+	                [Rel_Produzida] [float] NULL CONSTRAINT [DF_Relacao_Rel_Produzida]  DEFAULT ('0'),
+	                [Rel_Requisitada] [float] NULL CONSTRAINT [DF_Relacao_Rel_Requisitada]  DEFAULT ('0'),
+	                [Rel_Relacao] [float] NULL,
+	                [Rel_Tipo] [varchar](2) NULL,
+	                [ID] [int] IDENTITY(1,1) NOT NULL,
+	                [Arq_Origem_ID] [int] NULL)";
+
+            SqlTransaction trA = null;
+
+            conn.Open();
+            trA = conn.BeginTransaction();
+            cmdColuna.Transaction = trA;
+            cmdColuna.ExecuteNonQuery();
+            trA.Commit();
+            conn.Close();
+
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\relacaoProducaoFormatado.xlsx; Extended Properties=Excel 12.0;";
+
+            using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
+            {
+                OleDbCommand cmd = new OleDbCommand("Select [Código Produto Acabado]" +
+                    ", [Código Matéria-prima]" +
+                    ", [Quantidade Produzida], [Quantidade Requisitada]," +
+                    " [Relação de Produção], [Tipo de Relação]" +
+                    " from [Relação de Produção$]", connection);
+
+                connection.Open();
+                OleDbDataReader dReader = cmd.ExecuteReader();
+
+                using (SqlBulkCopy sqlBulk = new SqlBulkCopy(sqlConnectionString))
+                {
+                    sqlBulk.DestinationTableName = "Relacao_Carga";
+                    sqlBulk.WriteToServer(dReader);
+                }
+
+                SqlCommand cmdCopPedido = conn.CreateCommand();
+
+                cmdCopPedido.CommandText =
+                        @"INSERT INTO [D_Relacao_Carga]
+						([Rel_PA_Pro_ID],
+	                        [Rel_MP_Pro_ID],
+	                        [Rel_Produzida],
+	                        [Rel_Requisitada],
+	                        [Rel_Relacao],
+	                        [Rel_Tipo])
+                          SELECT  max([Rel_PA_Pro_ID]),
+	                                max([Rel_MP_Pro_ID]),
+	                                max([Rel_Produzida]),
+	                                max([Rel_Requisitada]),
+	                                max([Rel_Relacao]),
+	                                max([Rel_Tipo])
+                            FROM [Relacao_Carga]
+                            group by
+                            [Rel_PA_Pro_ID],
+	                        [Rel_MP_Pro_ID],
+	                        [Rel_Tipo]";
+
+                //WHERE VND_NF_ID IS NOT NULL AND VND_CFOP IS NOT NULL";
+
+                // select*
+                //from Clientes a left join d_clientes b on a.id = b.lin_origem_id
+                //where b.Cli_ID is null
+
+                SqlTransaction tr = null;
+                try
+                {
+                    conn.Open();
+                    tr = conn.BeginTransaction();
+                    cmdCopPedido.Transaction = tr;
+                    cmdCopPedido.ExecuteNonQuery();
+                    tr.Commit();
+
+                    label1.Text = "Tabela Relacao_Carga copiada ";
                 }
                 catch (Exception ex)
                 {
