@@ -45,12 +45,12 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\clientesOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\clientesOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ClientesOriginaisHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ClientesOriginaisHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
-
+            MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs("c:\\a\\clientesFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\clientesformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -65,7 +65,7 @@ namespace testeExcel
 	                    [Cli_ID] [varchar](70) NULL,
 	                    [Cli_Nome] [varchar](255) NULL,
 	                    [Cli_Pss_ID] [int] NULL,
-	                    [Cli_Vinc] [varchar](1) NOT NULL,
+	                    [Cli_Vinc] [varchar](1) NULL,
 	                    [Cli_Vinc_DT_Ini] [datetime] NULL,
 	                    [Cli_Vinc_DT_Fim] [datetime] NULL,
 	                    [Cli_CNPJ] [varchar](14) NULL,
@@ -85,11 +85,11 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\clientesFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\clientesformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
-                OleDbCommand cmd = new OleDbCommand("Select [codigo], Nome,  [Código do País], Vínculo, [Data Vínculo Inicial], [Data Vínculo Final], CNPJ from [cliente$]", connection);
+                OleDbCommand cmd = new OleDbCommand("Select [Código do Cliente], Nome,  [Código do País], Vínculo, [Data Vínculo Inicial], [Data Vínculo Final], CNPJ from [Clientes$]", connection);
 
                 connection.Open();
                 OleDbDataReader dReader = cmd.ExecuteReader();
@@ -106,6 +106,7 @@ namespace testeExcel
                         @"INSERT INTO D_CLIENTES (CLI_ID, CLI_NOME, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], [Cli_CNPJ], Lin_Origem_id)
                         SELECT CLI_ID, max(CLI_NOME), CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], max([Cli_CNPJ]), max(id)
                         FROM clientes
+                        where cli_id is not null and cli_vinc is not null
                         GROUP BY CLI_ID, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim]";
 
                 // select*
@@ -141,14 +142,14 @@ namespace testeExcel
 
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\fornecedoresFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\fornecedoresFormatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
-            MyApp.Workbooks.Add("C:\\a\\fornecedoresOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\fornecedoresOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\FornecedoresOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\FornecedoresOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
-
+            MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs("c:\\a\\fornecedoresFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\fornecedoresFormatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -199,15 +200,9 @@ namespace testeExcel
 
                 cmdCopPedido.CommandText =
                         @"INSERT INTO D_FORNECEDORES ([For_ID], [For_Nome], [For_PSS_ID], [For_Vinc], [For_Vinc_DT_Ini], [For_Vinc_DT_Fim], [For_CNPJ], Lin_Origem_id)
-                        SELECT For_ID, max(For_Nome),For_PSS_ID,
-						CASE 
-						WHEN For_Vinc IS NULL
-						THEN
-						'S'
-						ELSE
-						FOR_VINC
-						END, [For_Vinc_DT_Ini], [For_Vinc_DT_Fim], max([For_CNPJ]), max(id)
+                        SELECT For_ID, max(For_Nome),For_PSS_ID, [For_Vinc], [For_Vinc_DT_Ini], [For_Vinc_DT_Fim], max([For_CNPJ]), max(id)
                         FROM fornecedores
+                        WHERE FOR_ID IS NOT NULL AND FOR_VINC IS NOT NULL
 						GROUP BY FOR_ID, FOR_VINC, FOR_PSS_ID, [FOR_Vinc_DT_Ini], [FOR_Vinc_DT_Fim]";
 
                 // select*
@@ -245,16 +240,16 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\produtosOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\produtosOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\produtosOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\produtosOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
-
+            MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs("c:\\a\\produtosFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\produtosformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\produtosFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\produtosformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
             SqlCommand cmdColuna = conn.CreateCommand();
 
             cmdColuna.CommandText =
@@ -281,7 +276,7 @@ namespace testeExcel
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
-                OleDbCommand cmd = new OleDbCommand("Select [Código do Produto], [Descricao], [Unidade de Medida],  [ Classificação Fiscal (NCM)] from [Produtos$]", connection);
+                OleDbCommand cmd = new OleDbCommand("Select [Código do Produto], [Descrição], [Unidade de Medida],  [ Classificação Fiscal (NCM)] from [Produtos$]", connection);
 
                 connection.Open();
                 OleDbDataReader dReader = cmd.ExecuteReader();
@@ -364,13 +359,13 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\saldoInicialOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\saldoInicialOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\SaldosInicialOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\SaldosInicialOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
-
+            MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
             ws.Range["B:B"].Replace(".", "/");
-            wb.SaveAs("c:\\a\\saldoInicialFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\SaldosInicialformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -406,7 +401,7 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\saldoInicialFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\saldoInicialformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
@@ -463,13 +458,13 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\saldoFinalOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\saldoFinalOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\SaldosFinalOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\SaldosFinalOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
-
+            MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
             ws.Range["B:B"].Replace(".", "/");
-            wb.SaveAs("c:\\a\\saldoFinalFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\SaldosFinalformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -505,7 +500,7 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\saldoFinalFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\SaldosFinalformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
@@ -563,12 +558,12 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\comprasOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\comprasOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ComprasOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ComprasOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
             MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs("c:\\a\\comprasFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\ComprasformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -589,24 +584,24 @@ namespace testeExcel
                         [Cmp_DI_ID] [varchar](70) NULL,
                         [Cmp_DI_DT_Emissao] [datetime] NULL,
                         [Cmp_NF_Entrada] [varchar](70) NULL,
-                        [Cmp_NF_Serie] [varchar](70) NULL,
+                        [Cmp_NF_Serie] [varchar](70) NULL CONSTRAINT [DF_Compras_Cmp_NF_Serie]  DEFAULT (''),
                         [Cmp_NF_DT] [datetime] NULL,
                         [Cmp_CFOP] [int] NULL,
                         [Cmp_DI_DT_Vencimento] [datetime] NULL,
                         [Cmp_DI_Dias] [int] NULL,
-                        [Cmp_Qtde] [numeric](24, 12) NULL,
-                        [Cmp_Valor_Fob] [numeric](24, 12),
+                        [Cmp_Qtde] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_Qtde]  DEFAULT ((0)),
+                        [Cmp_Valor_Fob] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_Valor_Fob]  DEFAULT ((0)),
                         [Cmp_Cod_Moeda] [int] NULL,
-                        [Cmp_Vl_Frete_Moeda] [numeric](24, 12) NULL,
-                        [Cmp_VL_Seguro_Moeda] [numeric](24, 12) NULL,
+                        [Cmp_Vl_Frete_Moeda] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_VL_Frete_Reais]  DEFAULT ((0)),
+                        [Cmp_VL_Seguro_Moeda] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_VL_Seguro_Moeda]  DEFAULT ((0)),
                         [Cmp_Cod_Moeda_Seguro] [int] NULL,
                         [Cmp_Cod_Moeda_Frete] [int] NULL,
-                        [Cmp_Imposto_Import] [numeric](24, 12) NULL,
-                        [Cmp_ICMS] [numeric](24, 12) NULL,
-                        [Cmp_PIS] [numeric](24, 12) NULL,
-                        [Cmp_COFINS] [numeric](24, 12) NULL,
+                        [Cmp_Imposto_Import] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_Imposto_Import]  DEFAULT ((0)),
+                        [Cmp_ICMS] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_ICMS]  DEFAULT ((0)),
+                        [Cmp_PIS] [numeric](24, 12)  NULL CONSTRAINT [DF_Compras_Cmp_PIS]  DEFAULT ((0)),
+                        [Cmp_COFINS] [numeric](24, 12) NULL CONSTRAINT [DF_Compras_Cmp_COFINS]  DEFAULT ((0)),
                         [Cmp_Und_Id] [int] NULL,
-                        [Cmp_CNPJ] [varchar](20) NULL,
+                        [Cmp_CNPJ] [varchar](20) NULL CONSTRAINT [DF_Compras_Cmp_CNPJ]  DEFAULT (''),
                         [Cmp_Incoterm] [varchar](70) NULL,
                         [Cmp_For_id_Seguro] [varchar](70) NULL,
                         [Cmp_For_id_Frete] [varchar](70) NULL,
@@ -622,15 +617,15 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\comprasFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\ComprasformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
                 OleDbCommand cmd = new OleDbCommand("Select [Código do Produto], [Código da Divisão] ,[Código do Fornecedor], [N˚ lançamento contábil]" +
-                    ", [N˚ fatura comercial],[Data da BL],[Numero da DI]" +
+                    ",[N˚ fatura comercial],[Data da BL],[Numero da DI]" +
                     ",[Data da Importação],[Número da NF de Entrada],[Série Nota fiscal de Entrada],[Data Entrada no Estoque]" +
-                    ",[CFOP Nota Fiscal],[Data Vencimento Média],[Prazo de Vencimento Médio],[Quantidade]" +
-                    ",[Valor \"FOB\" em reais],[Código moeda estrangeira],[Frete],[Seguro],[Código moeda frete]" +
+                    ",[CFOP Nota Fiscal], [Data Vencimento Média], [Prazo de Vencimento Médio], [Quantidade]" +
+                    ",[Valor \"FOB\" (moeda estrangeira)],[Código moeda estrangeira],[Frete],[Seguro],[Código moeda frete]" +
                     ",[código moeda seguro],[Imposto de Importação],[ICMS (reais)],[PIS (reais)],[COFINS (reais)]" +
                     ",[Unidade de Medida],[CNPJ],[Incoterm],[Código do fornecedor de Seguro],[Código do Fornecedor de Frete]" +
                     "  from [Compras$]", connection);
@@ -748,14 +743,16 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\vendasOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\vendasOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\VendasOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\VendasOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
 
             ws.Range["A:A"].NumberFormat = "@";
             ws.Range["J:J"].NumberFormat = "@";
+            ws.Range["A1:AZ100000"].Copy();
+            ws.Range["A1:AZ100000"].PasteSpecial(XlPasteType.xlPasteValues);
             MyApp.DisplayAlerts = false;
-            wb.SaveAs("c:\\a\\vendasFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\VendasFormatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -769,7 +766,7 @@ namespace testeExcel
                     CREATE TABLE [dbo].[Vendas_Itens](
 	                    [Vnd_Cli_ID] [varchar](70) NULL,
 	                    [Vnd_NF_ID] [varchar](70) NULL,
-	                    [Vnd_NF_Serie] [varchar](70) NOT NULL CONSTRAINT [DF_Vendas_Itens_Vnd_NF_Serie]  DEFAULT (''),
+	                    [Vnd_NF_Serie] [varchar](70) NULL CONSTRAINT [DF_Vendas_Itens_Vnd_NF_Serie]  DEFAULT (''),
 	                    [Vnd_Cod_Divisao] [varchar](70) NULL,
 	                    [Vnd_CFOP] [int] NULL,
 	                    [Vnd_Dt_Emissao] [datetime] NULL,
@@ -777,8 +774,8 @@ namespace testeExcel
 	                    [Vnd_Dias] [int]  NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Dias]  DEFAULT ((0)),
 	                    [Vnd_Item] [varchar](70) NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Item]  DEFAULT ((0)),
 	                    [Vnd_Pro_id] [varchar](70) NULL,
-	                    [Vnd_Qtde] [numeric](24, 12) NOT NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Qtde]  DEFAULT ((0)),
-	                    [Vnd_Vl_Nota] [numeric](24, 12) NOT NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Vl_Nota]  DEFAULT ((0)),
+	                    [Vnd_Qtde] [numeric](24, 12) NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Qtde]  DEFAULT ((0)),
+	                    [Vnd_Vl_Nota] [numeric](24, 12) NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Vl_Nota]  DEFAULT ((0)),
 	                    [Vnd_Desconto] [numeric](24, 12) NULL CONSTRAINT [DF_Vendas_Itens_Vnd_Desconto]  DEFAULT ((0)),
 	                    [Vnd_ICMS] [numeric](24, 12)  NULL CONSTRAINT [DF_Vendas_Itens_Vnd_ICMS]  DEFAULT ((0)),
 	                    [Vnd_PIS] [numeric](24, 12)  NULL CONSTRAINT [DF_Vendas_Itens_Vnd_PIS]  DEFAULT ((0)),
@@ -804,15 +801,17 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\vendasFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\VendasFormatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
                 OleDbCommand cmd = new OleDbCommand("Select [Código do Cliente], [Número Nota Fiscal], [Série Nota Fiscal], [Código da Divisão]" +
-                    ",[CFOP], [Data Emissão], [Data Vencimento], [Prazo de Vencimento], [Item Nota Fiscal], [Código do Produto], [Quantidade]" +
-                    ",[Valor Venda Sem impostos], [Descontos Incondicionais], [ICMS], [PIS], [COFINS], [ISS], [Comissão], [Frete], [Seguro]" +
-                    ",[Data de Embarque], [Código Moeda estrangeira], [Valor em Moeda estrangeira], [Custo da Venda Total] " +
-                    " from[Vendas$]", connection);
+                    ",[CFOP] ,[Data Emissão], [Data Vencimento]" +
+                    ",[Prazo de Vencimento], [Item Nota Fiscal], [Código do Produto], [Quantidade]" +
+                    ",[Valor Venda Sem o IPI (Reais)], [Descontos Incondicionais], [ICMS], [PIS], [COFINS], [ISS], [Comissão], [Frete], [Seguro]" +
+                    ",[Data de Embarque], [Código Moeda estrangeira], [Valor em Moeda estrangeira]" +
+                    ", [Custo da Venda Total] " +
+                    " from [Vendas$]", connection);
 
                 connection.Open();
                 OleDbDataReader dReader = cmd.ExecuteReader();
@@ -882,7 +881,7 @@ namespace testeExcel
 	                        [Vnd_CNPJ],
 	                        [ID]
                             FROM Vendas_Itens
-                            WHERE VND_NF_ID IS NOT NULL AND VND_CFOP IS NOT NULL";
+                            WHERE VND_NF_ID IS NOT NULL AND VND_CFOP IS NOT NULL and VND_PRO_ID IS NOT NULL";
 
                 // select*
                 //from Clientes a left join d_clientes b on a.id = b.lin_origem_id
@@ -917,14 +916,14 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\ordemProducaoOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\ordemProducaoOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\OrdensOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\OrdensOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
 
             ws.Range["A:A"].NumberFormat = "@";
             ws.Range["D:D"].NumberFormat = "@";
             MyApp.DisplayAlerts = false;
-            wb.SaveAs("c:\\a\\ordemProducaoFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\OrdemProducaoformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -958,7 +957,7 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\ordemProducaoFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\OrdemProducaoformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
@@ -1041,14 +1040,14 @@ namespace testeExcel
             MyApp = new Excel.Application();
             object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\relacaoProducaoOriginal.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\relacaoProducaoOriginal.xlsx");
+            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\RelacaoOriginalHwashin.xlsx");
+            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\RelacaoOriginalHwashin.xlsx");
             Worksheet ws = wb.Sheets[1];
 
             ws.Range["A:A"].NumberFormat = "@";
            // ws.Range["D:D"].NumberFormat = "@";
             MyApp.DisplayAlerts = false;
-            wb.SaveAs("c:\\a\\relacaoProducaoFormatado.xlsx");
+            wb.SaveAs("c:\\a\\formatado\\relacaoProducaoformatadoHwashin.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -1078,15 +1077,15 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\relacaoProducaoFormatado.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\relacaoProducaoformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
 
             using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
             {
-                OleDbCommand cmd = new OleDbCommand("Select [Código Produto Acabado]" +
-                    ", [Código Matéria-prima]" +
-                    ", [Quantidade Produzida], [Quantidade Requisitada]," +
+                OleDbCommand cmd = new OleDbCommand("Select [Código Produto Acabado]," +
+                    "[Código Matéria-prima]," +
+                    "[Quantidade Produzida], [Quantidade Requisitada]," +
                     " [Relação de Produção], [Tipo de Relação]" +
-                    " from [Relação de Produção$]", connection);
+                    "  from [Relação Produção$]", connection);
 
                 connection.Open();
                 OleDbDataReader dReader = cmd.ExecuteReader();
@@ -1147,6 +1146,11 @@ namespace testeExcel
                 }
 
             }
+        }
+
+        private void buttonAbrir_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
