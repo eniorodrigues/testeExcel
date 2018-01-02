@@ -38,19 +38,28 @@ namespace testeExcel
         public List<string> colunas = new List<string>();
         public List<string> colunasCreate = new List<string>();
         public string tipoArquivo;
+        Stream myStream = null;
 
         private void button1_Click(object sender, EventArgs e)
         {
 
-            MyApp = new Excel.Application();
-            object misValue = System.Reflection.Missing.Value;
 
-            MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ClientesOriginaisHwashin.xlsx");
-            Workbook wb = MyApp.Workbooks.Add("C:\\a\\OriginalHwashin\\ClientesOriginaisHwashin.xlsx");
+        foreach (string element in filesAdionado)
+        {
+
+         
+         //   excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + element + ";Extended Properties=Excel 12.0;";
+         //   MyApp.Workbooks.Add("");
+            //MyApp.Workbooks.Add(@directoryPath + "\\" + element);
+
+            MyApp = new Excel.Application();
+
+            MyApp.Workbooks.Add(caminho);
+            Workbook wb = MyApp.Workbooks.Add(caminho);
             Worksheet ws = wb.Sheets[1];
             MyApp.DisplayAlerts = false;
             ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs("c:\\a\\formatado\\clientesformatadoHwashin.xlsx");
+            wb.SaveAs(directoryPath + "\\" + files + "formatado.xlsx");
             wb.Close();
             MyApp.Quit();
             SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
@@ -85,55 +94,55 @@ namespace testeExcel
             trA.Commit();
             conn.Close();
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=c:\\a\\formatado\\clientesformatadoHwashin.xlsx; Extended Properties=Excel 12.0;";
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + files + "formatado.xlsx; Extended Properties=Excel 12.0;";
 
-            using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
-            {
-                OleDbCommand cmd = new OleDbCommand("Select [Código do Cliente], Nome,  [Código do País], Vínculo, [Data Vínculo Inicial], [Data Vínculo Final], CNPJ from [Clientes$]", connection);
-
-                connection.Open();
-                OleDbDataReader dReader = cmd.ExecuteReader();
-
-                using (SqlBulkCopy sqlBulk = new SqlBulkCopy(sqlConnectionString))
+                using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
                 {
-                    sqlBulk.DestinationTableName = "Clientes";
-                    sqlBulk.WriteToServer(dReader);
-                }
+                    OleDbCommand cmd = new OleDbCommand("Select [Código do Cliente], Nome,  [Código do País], Vínculo, [Data Vínculo Inicial], [Data Vínculo Final], CNPJ from [Clientes$]", connection);
 
-                SqlCommand cmdCopPedido = conn.CreateCommand();
+                    connection.Open();
+                    OleDbDataReader dReader = cmd.ExecuteReader();
 
-                cmdCopPedido.CommandText =
-                        @"INSERT INTO D_CLIENTES (CLI_ID, CLI_NOME, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], [Cli_CNPJ], Lin_Origem_id)
+                    using (SqlBulkCopy sqlBulk = new SqlBulkCopy(sqlConnectionString))
+                    {
+                        sqlBulk.DestinationTableName = "Clientes";
+                        sqlBulk.WriteToServer(dReader);
+                    }
+
+                    SqlCommand cmdCopPedido = conn.CreateCommand();
+
+                    cmdCopPedido.CommandText =
+                            @"INSERT INTO D_CLIENTES (CLI_ID, CLI_NOME, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], [Cli_CNPJ], Lin_Origem_id)
                         SELECT CLI_ID, max(CLI_NOME), CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], max([Cli_CNPJ]), max(id)
                         FROM clientes
                         where cli_id is not null and cli_vinc is not null
                         GROUP BY CLI_ID, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim]";
 
-                // select*
-                //from Clientes a left join d_clientes b on a.id = b.lin_origem_id
-                // where b.Cli_ID is null
+                    // select*
+                    //from Clientes a left join d_clientes b on a.id = b.lin_origem_id
+                    // where b.Cli_ID is null
 
-                SqlTransaction tr = null;
-                try
-                {
-                    conn.Open();
-                    tr = conn.BeginTransaction();
-                    cmdCopPedido.Transaction = tr;
-                    cmdCopPedido.ExecuteNonQuery();
-                    tr.Commit();
+                    SqlTransaction tr = null;
+                    try
+                    {
+                        conn.Open();
+                        tr = conn.BeginTransaction();
+                        cmdCopPedido.Transaction = tr;
+                        cmdCopPedido.ExecuteNonQuery();
+                        tr.Commit();
 
-                    label1.Text = "Tabela clientes copiada ";
+                        label1.Text = "Tabela clientes copiada ";
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        MessageBox.Show(ex.Message);
+                    }
+                    finally
+                    {
+                        conn.Close();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    tr.Rollback();
-                    MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    conn.Close();
-                }
-
             }
         }
 
@@ -1045,7 +1054,7 @@ namespace testeExcel
             Worksheet ws = wb.Sheets[1];
 
             ws.Range["A:A"].NumberFormat = "@";
-           // ws.Range["D:D"].NumberFormat = "@";
+            // ws.Range["D:D"].NumberFormat = "@";
             MyApp.DisplayAlerts = false;
             wb.SaveAs("c:\\a\\formatado\\relacaoProducaoformatadoHwashin.xlsx");
             wb.Close();
@@ -1148,8 +1157,150 @@ namespace testeExcel
             }
         }
 
+
         private void buttonAbrir_Click(object sender, EventArgs e)
         {
+
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+            openFileDialog1.InitialDirectory = "C:\\";
+            openFileDialog1.Filter = "Csv files (*.csv*)|*.csv*|Excel files (*.xls*)|*.xls*";
+            openFileDialog1.FilterIndex = 2;
+            openFileDialog1.RestoreDirectory = true;
+            openFileDialog1.Multiselect = true;
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    if ((myStream = openFileDialog1.OpenFile()) != null)
+                    {
+                        using (myStream)
+                        {
+
+                            caminho = openFileDialog1.FileName;
+                            directoryPath = Path.GetDirectoryName(openFileDialog1.FileName);
+                            files = (openFileDialog1.);
+
+                            foreach (string file in files)
+                            {
+                                filesAdionado.Add(file);
+                                listBox1.Items.Add(file);
+                            }
+
+                              carregaLinhas();
+
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        public void carrega()
+        {
+            foreach (string element in filesAdionado)
+            {
+
+                MyApp = new Excel.Application();
+                object misValue = System.Reflection.Missing.Value;
+                excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + element + ";Extended Properties=Excel 12.0;";
+                MyApp.Workbooks.Add("");
+                MyApp.Workbooks.Add(@directoryPath + "\\" + element);
+
+                //    xlWorkBook = MyApp.Workbooks.Add(misValue);
+                //    xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+
+                //    xlWorkSheet.EnableSelection = Microsoft.Office.Interop.Excel.XlEnableSelection.xlNoSelection;
+
+                for (int i = 2; i <= MyApp.Workbooks.Count; i++)
+                {
+                    for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
+                    {
+
+                        string emptyString = Convert.ToString((MyApp.Workbooks[i].Worksheets[j].Cells[1, 1]).Value2);
+
+                        if (emptyString != null)
+                        {
+
+                            if (MyApp.Workbooks[i].Worksheets[j].name != "Input" && MyApp.Workbooks[i].Worksheets[j].name != "Combined")
+                            {
+
+
+                                label2.Text = "Importando arquivo " + element + " da sheet " + MyApp.Workbooks[i].Worksheets[j].name;
+
+                                using (OleDbConnection connection =
+                                new OleDbConnection(excelConnectionString))
+                                {
+                                    connection.Open();
+
+                                    StringBuilder comandoExcel = new StringBuilder();
+                                    for (int h = 0; h < colunas.Count; h++)
+                                    {
+                                        comandoExcel.Append("[" + Convert.ToString(colunas[h]).Replace(".", "#") + "], ");
+                                    }
+
+                                    string sheet = MyApp.Workbooks[i].Worksheets[j].name;
+                                    string arquivo = element;
+                                    string campos = Convert.ToString(comandoExcel);
+
+                                    OleDbCommand command = new OleDbCommand
+                                        ("Select " + campos + " '" + sheet + "', ' " + arquivo + "' FROM [" + MyApp.Workbooks[i].Worksheets[j].name + "$]", connection);
+                                    //MessageBox.Show(command.CommandText);
+                                    using (DbDataReader dr = command.ExecuteReader())
+                                    {
+                                        // SQL Server Connection String
+                                        string sqlConnectionString = "Data Source=" + conexao + ";Initial Catalog=" + baseDeDados + ";Integrated Security=True";
+
+                                        // Bulk Copy to SQL Server
+                                        using (SqlBulkCopy bulkCopy =
+                                               new SqlBulkCopy(sqlConnectionString))
+                                        {
+                                            bulkCopy.DestinationTableName = tabela;
+                                            bulkCopy.WriteToServer(dr);
+                                        }
+                                    }
+                                }
+
+
+                            }
+                        }
+
+                    }
+
+
+                }
+
+                if (filesAdionado.Count == 0)
+                {
+                    MessageBox.Show("Sem arquivo para adicionar");
+                }
+            }
+        }
+
+
+
+        public void carregaLinhas()
+        {
+                label2.Text = caminho;
+                MyApp = new Excel.Application();
+                excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + caminho + ";Extended Properties=Excel 12.0;";
+                MyApp.Workbooks.Add("");
+                MyApp.Workbooks.Add(caminho);
+
+                    for (int k = 1; k <= MyApp.Workbooks[2].Worksheets[1].UsedRange.Columns.Count; k++)
+                    {
+                        if (Convert.ToString((MyApp.Workbooks[2].Worksheets[1].Cells[1, k].Value2)) != null && Convert.ToString(MyApp.Workbooks[2].Worksheets[1].Cells[1, k].Value2.ToString()) != "")
+                        {
+                            string coluna = Convert.ToString(MyApp.Workbooks[2].Worksheets[1].Cells[1, k].Value2);
+                            colunas.Add(coluna);
+                            colunasCreate.Add(coluna.Trim());
+                            listBox2.Items.Add(coluna.Trim());
+                        }
+                    }
 
         }
     }
