@@ -15,6 +15,8 @@ using Microsoft.Office.Interop.Excel;
 using ExcelIt = Microsoft.Office.Interop.Excel;
 using System.Reflection;
 using System.Drawing;
+using System.Collections.Generic;
+using System.Data;
 
 namespace testeExcel
 {
@@ -40,6 +42,7 @@ namespace testeExcel
         public string tipoArquivo;
         Stream myStream = null;
         string nomeSheet;
+        DataGrid dg = null;
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -57,7 +60,6 @@ namespace testeExcel
                 ws.Range["A:A"].NumberFormat = "@";
                 wb.SaveAs(directoryPath + "\\" + System.IO.Path.GetFileNameWithoutExtension(element) + "-(formatado).xlsx");
                 wb.Close();
-             // MyApp.Quit();
                 
                 SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
                 string sqlConnectionString = "Data Source=BRCAENRODRIGUES\\SQLEXPRESS;Initial Catalog=my_database;Integrated Security=True";
@@ -86,10 +88,9 @@ namespace testeExcel
                         "[Cli_Vinc_Justific] [varchar](2) NULL," +
                         "[Cli_Paraiso_Fiscal] [varchar](1) NULL CONSTRAINT [DF_Clientes_Cli_Paraiso_Fiscal]  DEFAULT ('N')," +
                         "[Arq_Origem_ID] [int] NULL," +
-                        "[Lin_Origem_ID] [int] NULL," +
                         "[ID] [int] IDENTITY(1,1) NOT NULL" +
                     ") ON [PRIMARY]";
-
+ 
             SqlTransaction trA = null;
 
             conn.Open();
@@ -1243,11 +1244,6 @@ namespace testeExcel
                 MyApp.Workbooks.Add("");
                 MyApp.Workbooks.Add(@directoryPath + "\\" + element);
 
-                //    xlWorkBook = MyApp.Workbooks.Add(misValue);
-                //    xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
-
-                //    xlWorkSheet.EnableSelection = Microsoft.Office.Interop.Excel.XlEnableSelection.xlNoSelection;
-
                     for (int i = 2; i <= MyApp.Workbooks.Count; i++)
                     {
                         for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
@@ -1317,10 +1313,76 @@ namespace testeExcel
                             string coluna = Convert.ToString(MyApp.Workbooks[2].Worksheets[1].Cells[1, k].Value2);
                             colunas.Add(coluna);
                             colunasCreate.Add(coluna.Trim());
-                            listBox2.Items.Add(coluna.Trim());
                         }
                     }
+                    
+            List<string[]> list = new List<string[]>();
+            list.Add(colunas.ToArray());
+            list.Add(new string[] { "Row 2", "Row 2" });
+            list.Add(new string[] { "Row 3" });
+            
+            System.Data.DataTable table = ConvertListToDataTable(list);
+            dataGridView1.DataSource = table;
 
+        }
+        
+        //static System.Data.DataTable ConvertListToDataTable(List<string> list)
+        //{
+        //    // New table.
+        //    System.Data.DataTable table = new System.Data.DataTable();
+        //    // Get max columns.
+        //    int columns = 0;
+        //    foreach (var array in list)
+        //    {
+        //        if (array.Length > 3)
+        //        {
+        //            columns = array.Length;
+        //        }
+        //    }
+        //    // Add columns.
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        table.Columns.Add();
+        //    }
+        //    table.Columns[0].ColumnName = "Campos Excel";
+        //    table.Columns[1].ColumnName = "Campos SQL";
+        //    table.Columns[2].ColumnName = "Tipo do Campo";
+        //    // Add rows.
+        //    foreach (var array in list)
+        //    {
+        //        table.Rows.Add(array);
+        //    }
+        //    return table;
+        //}
+
+        static System.Data.DataTable ConvertListToDataTable(List<string[]> list)
+        {
+            // New table.
+            System.Data.DataTable table = new System.Data.DataTable();
+
+            // Get max columns.
+            int columns = 0;
+            foreach (var array in list)
+            {
+                if (array.Length > 3)
+                {
+                    columns = array.Length;
+                }
+            }
+
+            // Add columns.
+            for (int i = 0; i < 3; i++)
+            {
+                table.Columns.Add();
+            }
+
+            // Add rows.
+            foreach (var array in list)
+            {
+                table.Rows.Add(array);
+            }
+
+            return table;
         }
     }
 }
