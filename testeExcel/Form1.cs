@@ -39,6 +39,7 @@ namespace testeExcel
         public List<string> colunasCreate = new List<string>();
         public string tipoArquivo;
         Stream myStream = null;
+        string nomeSheet;
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -47,43 +48,47 @@ namespace testeExcel
         foreach (string element in filesAdionado)
         {
 
-         
-         //   excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + element + ";Extended Properties=Excel 12.0;";
-         //   MyApp.Workbooks.Add("");
-            //MyApp.Workbooks.Add(@directoryPath + "\\" + element);
+                MyApp = new Excel.Application();
+                MyApp.Workbooks.Add(caminho);
+               
+                Workbook wb = MyApp.Workbooks.Add(caminho);
+                Worksheet ws = wb.Sheets[1];
+                MyApp.DisplayAlerts = false;
+                ws.Range["A:A"].NumberFormat = "@";
+                wb.SaveAs(directoryPath + "\\" + System.IO.Path.GetFileNameWithoutExtension(element) + "-(formatado).xlsx");
+                wb.Close();
+             // MyApp.Quit();
+                
+                SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
+                string sqlConnectionString = "Data Source=BRCAENRODRIGUES\\SQLEXPRESS;Initial Catalog=my_database;Integrated Security=True";
 
-            MyApp = new Excel.Application();
-
-            MyApp.Workbooks.Add(caminho);
-            Workbook wb = MyApp.Workbooks.Add(caminho);
-            Worksheet ws = wb.Sheets[1];
-            MyApp.DisplayAlerts = false;
-            ws.Range["A:A"].NumberFormat = "@";
-            wb.SaveAs(directoryPath + "\\" + files + "formatado.xlsx");
-            wb.Close();
-            MyApp.Quit();
-            SqlConnection conn = new SqlConnection(@"Data Source=BRCAENRODRIGUES\SQLEXPRESS; Initial Catalog=my_database; Integrated Security=True");
-            string sqlConnectionString = "Data Source=BRCAENRODRIGUES\\SQLEXPRESS;Initial Catalog=my_database;Integrated Security=True";
-
+                for (int i = 1; i <= MyApp.Workbooks.Count; i++)
+                {
+                    for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
+                    {
+                         nomeSheet = MyApp.Workbooks[1].Sheets[1].Name.ToString();
+                    }
+                }
+                       
             SqlCommand cmdColuna = conn.CreateCommand();
 
             cmdColuna.CommandText =
-              @"IF OBJECT_ID('dbo.clientes', 'U') IS NOT NULL 
-                  DROP TABLE dbo.clientes; 
-                    CREATE TABLE [dbo].[Clientes](
-	                    [Cli_ID] [varchar](70) NULL,
-	                    [Cli_Nome] [varchar](255) NULL,
-	                    [Cli_Pss_ID] [int] NULL,
-	                    [Cli_Vinc] [varchar](1) NULL,
-	                    [Cli_Vinc_DT_Ini] [datetime] NULL,
-	                    [Cli_Vinc_DT_Fim] [datetime] NULL,
-	                    [Cli_CNPJ] [varchar](14) NULL,
-	                    [Cli_Vinc_Justific] [varchar](2) NULL,
-	                    [Cli_Paraiso_Fiscal] [varchar](1) NULL CONSTRAINT [DF_Clientes_Cli_Paraiso_Fiscal]  DEFAULT ('N'),
-	                    [Arq_Origem_ID] [int] NULL,
-	                    [Lin_Origem_ID] [int] NULL,
-	                    [ID] [int] IDENTITY(1,1) NOT NULL
-                    ) ON [PRIMARY]";
+              "IF OBJECT_ID('dbo.clientes', 'U') IS NOT NULL " +
+                  "DROP TABLE dbo.clientes; "+
+                    "CREATE TABLE [dbo].[Clientes](" +
+                        "[Cli_ID] [varchar](70) NULL," +
+                        "[Cli_Nome] [varchar](255) NULL," +
+                        "[Cli_Pss_ID] [int] NULL," +
+                        "[Cli_Vinc] [varchar](1) NULL," +
+                        "[Cli_Vinc_DT_Ini] [datetime] NULL," +
+                        "[Cli_Vinc_DT_Fim] [datetime] NULL," +
+                        "[Cli_CNPJ] [varchar](14) NULL," +
+                        "[Cli_Vinc_Justific] [varchar](2) NULL," +
+                        "[Cli_Paraiso_Fiscal] [varchar](1) NULL CONSTRAINT [DF_Clientes_Cli_Paraiso_Fiscal]  DEFAULT ('N')," +
+                        "[Arq_Origem_ID] [int] NULL," +
+                        "[Lin_Origem_ID] [int] NULL," +
+                        "[ID] [int] IDENTITY(1,1) NOT NULL" +
+                    ") ON [PRIMARY]";
 
             SqlTransaction trA = null;
 
@@ -93,34 +98,61 @@ namespace testeExcel
             cmdColuna.ExecuteNonQuery();
             trA.Commit();
             conn.Close();
+                
+            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + System.IO.Path.GetFileNameWithoutExtension(element) + "-(formatado).xlsx; Extended Properties=Excel 12.0;";
 
-            excelConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + directoryPath + "\\" + files + "formatado.xlsx; Extended Properties=Excel 12.0;";
-
-                using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
+                for (int i = 1; i <= MyApp.Workbooks.Count; i++)
                 {
-                    OleDbCommand cmd = new OleDbCommand("Select [Código do Cliente], Nome,  [Código do País], Vínculo, [Data Vínculo Inicial], [Data Vínculo Final], CNPJ from [Clientes$]", connection);
-
-                    connection.Open();
-                    OleDbDataReader dReader = cmd.ExecuteReader();
-
-                    using (SqlBulkCopy sqlBulk = new SqlBulkCopy(sqlConnectionString))
+                    for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
                     {
-                        sqlBulk.DestinationTableName = "Clientes";
-                        sqlBulk.WriteToServer(dReader);
+
+                        using (OleDbConnection connection = new OleDbConnection(excelConnectionString))
+                        {
+
+                            StringBuilder comandoExcel = new StringBuilder();
+                            
+                            for (int h = 0; h < colunas.Count; h++)
+                            {
+                                if (h == colunas.Count -1)
+                                {
+                                    comandoExcel.Append("[" + Convert.ToString(colunas[h]).Replace(".", "#") + "] ");
+                                }
+                                else
+                                {
+                                    comandoExcel.Append("[" + Convert.ToString(colunas[h]).Replace(".", "#") + "], ");
+                                }
+                            }
+
+                            string sheet = MyApp.Workbooks[i].Worksheets[j].name;
+                            string arquivo = element;
+                            string campos = Convert.ToString(comandoExcel);
+
+                            OleDbCommand command = new OleDbCommand
+                                    ("Select " + campos + "  FROM [" + MyApp.Workbooks[i].Worksheets[j].name + "$]", connection);
+
+                            MessageBox.Show(command.CommandText);
+
+                            connection.Open();
+
+                            OleDbDataReader dReader = command.ExecuteReader();
+
+                            using (SqlBulkCopy sqlBulk = new SqlBulkCopy(sqlConnectionString))
+                            {
+                                sqlBulk.DestinationTableName = "Clientes";
+                                sqlBulk.WriteToServer(dReader);
+                            }
+
+                        }
                     }
 
                     SqlCommand cmdCopPedido = conn.CreateCommand();
 
                     cmdCopPedido.CommandText =
-                            @"INSERT INTO D_CLIENTES (CLI_ID, CLI_NOME, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], [Cli_CNPJ], Lin_Origem_id)
+                        @"INSERT INTO D_CLIENTES (CLI_ID, CLI_NOME, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], [Cli_CNPJ], Lin_Origem_id)
                         SELECT CLI_ID, max(CLI_NOME), CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim], max([Cli_CNPJ]), max(id)
                         FROM clientes
                         where cli_id is not null and cli_vinc is not null
                         GROUP BY CLI_ID, CLI_VINC, CLI_PSS_ID, [Cli_Vinc_DT_Ini], [Cli_Vinc_DT_Fim]";
-
-                    // select*
-                    //from Clientes a left join d_clientes b on a.id = b.lin_origem_id
-                    // where b.Cli_ID is null
 
                     SqlTransaction tr = null;
                     try
@@ -1180,7 +1212,7 @@ namespace testeExcel
 
                             caminho = openFileDialog1.FileName;
                             directoryPath = Path.GetDirectoryName(openFileDialog1.FileName);
-                            files = (openFileDialog1.);
+                            files = (openFileDialog1.SafeFileNames);
 
                             foreach (string file in files)
                             {
@@ -1216,19 +1248,10 @@ namespace testeExcel
 
                 //    xlWorkSheet.EnableSelection = Microsoft.Office.Interop.Excel.XlEnableSelection.xlNoSelection;
 
-                for (int i = 2; i <= MyApp.Workbooks.Count; i++)
-                {
-                    for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
+                    for (int i = 2; i <= MyApp.Workbooks.Count; i++)
                     {
-
-                        string emptyString = Convert.ToString((MyApp.Workbooks[i].Worksheets[j].Cells[1, 1]).Value2);
-
-                        if (emptyString != null)
+                        for (int j = 1; j <= MyApp.Workbooks[i].Worksheets.Count; j++)
                         {
-
-                            if (MyApp.Workbooks[i].Worksheets[j].name != "Input" && MyApp.Workbooks[i].Worksheets[j].name != "Combined")
-                            {
-
 
                                 label2.Text = "Importando arquivo " + element + " da sheet " + MyApp.Workbooks[i].Worksheets[j].name;
 
@@ -1265,14 +1288,10 @@ namespace testeExcel
                                     }
                                 }
 
-
-                            }
                         }
 
+
                     }
-
-
-                }
 
                 if (filesAdionado.Count == 0)
                 {
