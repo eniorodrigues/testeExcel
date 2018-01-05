@@ -43,6 +43,7 @@ namespace testeExcel
         Stream myStream = null;
         string nomeSheet;
         DataGrid dg = null;
+        StringBuilder camposDataGrid = new StringBuilder();
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -111,16 +112,18 @@ namespace testeExcel
                         {
 
                             StringBuilder comandoExcel = new StringBuilder();
-                            
+
                             for (int h = 0; h < colunas.Count; h++)
                             {
                                 if (h == colunas.Count -1)
                                 {
                                     comandoExcel.Append("[" + Convert.ToString(colunas[h]).Replace(".", "#") + "] ");
+                                    camposDataGrid.Append(Convert.ToString(colunas[h]).Replace(".", "#") );
                                 }
                                 else
                                 {
                                     comandoExcel.Append("[" + Convert.ToString(colunas[h]).Replace(".", "#") + "], ");
+                                    camposDataGrid.Append(Convert.ToString(colunas[h]).Replace(".", "#") + " , ");
                                 }
                             }
 
@@ -130,8 +133,6 @@ namespace testeExcel
 
                             OleDbCommand command = new OleDbCommand
                                     ("Select " + campos + "  FROM [" + MyApp.Workbooks[i].Worksheets[j].name + "$]", connection);
-
-                            MessageBox.Show(command.CommandText);
 
                             connection.Open();
 
@@ -146,6 +147,10 @@ namespace testeExcel
                         }
                     }
 
+                    SqlCommand cmdCampos = conn.CreateCommand();
+                    cmdCampos.CommandText = "INSERT INTO CAMPOS (CAMPO_EXCEL) VALUES " + camposDataGrid;
+                    MessageBox.Show(cmdCampos.CommandText);
+                    
                     SqlCommand cmdCopPedido = conn.CreateCommand();
 
                     cmdCopPedido.CommandText =
@@ -1283,9 +1288,7 @@ namespace testeExcel
                                         }
                                     }
                                 }
-
                         }
-
 
                     }
 
@@ -1295,8 +1298,6 @@ namespace testeExcel
                 }
             }
         }
-
-
 
         public void carregaLinhas()
         {
@@ -1315,74 +1316,66 @@ namespace testeExcel
                             colunasCreate.Add(coluna.Trim());
                         }
                     }
-                    
-            List<string[]> list = new List<string[]>();
-            list.Add(colunas.ToArray());
-            list.Add(new string[] { "Row 2", "Row 2" });
-            list.Add(new string[] { "Row 3" });
-            
-            System.Data.DataTable table = ConvertListToDataTable(list);
+
+            System.Data.DataTable table = ConvertListToDataTable(colunas);
             dataGridView1.DataSource = table;
 
         }
-        
-        //static System.Data.DataTable ConvertListToDataTable(List<string> list)
-        //{
-        //    // New table.
-        //    System.Data.DataTable table = new System.Data.DataTable();
-        //    // Get max columns.
-        //    int columns = 0;
-        //    foreach (var array in list)
-        //    {
-        //        if (array.Length > 3)
-        //        {
-        //            columns = array.Length;
-        //        }
-        //    }
-        //    // Add columns.
-        //    for (int i = 0; i < 3; i++)
-        //    {
-        //        table.Columns.Add();
-        //    }
-        //    table.Columns[0].ColumnName = "Campos Excel";
-        //    table.Columns[1].ColumnName = "Campos SQL";
-        //    table.Columns[2].ColumnName = "Tipo do Campo";
-        //    // Add rows.
-        //    foreach (var array in list)
-        //    {
-        //        table.Rows.Add(array);
-        //    }
-        //    return table;
-        //}
 
-        static System.Data.DataTable ConvertListToDataTable(List<string[]> list)
+        static System.Data.DataTable ConvertListToDataTable(List<string> list)
         {
             // New table.
             System.Data.DataTable table = new System.Data.DataTable();
-
             // Get max columns.
             int columns = 0;
             foreach (var array in list)
             {
-                if (array.Length > 3)
+                if (array.Length > 1)
                 {
                     columns = array.Length;
                 }
             }
-
             // Add columns.
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 table.Columns.Add();
             }
-
+            table.Columns[0].ColumnName = "Campos Excel";
             // Add rows.
             foreach (var array in list)
             {
                 table.Rows.Add(array);
             }
-
             return table;
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            string connectionString = "Data Source=BRCAENRODRIGUES\\SQLEXPRESS;Initial Catalog=my_database;Integrated Security=True";
+            
+            string sql = "select b.name, c.name "+
+                        " from sys.all_objects a inner "+
+                        " join sys.all_columns b on a.object_id = b.object_id inner "+
+                        " join sys.types c on b.user_type_id = c.user_type_id "+
+                        " where a.name = '" + comboBox1.SelectedItem + "' ";
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlDataAdapter dataadapter = new SqlDataAdapter(sql, connection);
+            DataSet ds = new DataSet();
+            connection.Open();
+            dataadapter.Fill(ds, "Clientes");
+            connection.Close();
+            dataGridView2.DataSource = ds;
+            dataGridView2.DataMember = "Clientes";
+        }
+
+        private void dataGridView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Copy;
+        }
+
+        private void dataGridView1_DragDrop(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Copy;
         }
     }
 }
